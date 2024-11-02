@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Timesheet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\TimesheetResource;
+use App\Http\Resources\TimesheetDetailsResource;
 
 class TimesheetController extends Controller
 {
@@ -15,29 +17,27 @@ class TimesheetController extends Controller
     {
         $timesheet = Timesheet::query();
 
-        if ($request->has('name')) {
+        if ($request->has('name') && !empty($request->name)) {
             $timesheet->where('name', 'like', "%{$request->name}%");
         }
 
-        if ($request->has('user_id')) {
-            $timesheet->where('department', 'like', "%{$request->department}%");
+        if ($request->has('project_id') && !empty($request->project_id)) {
+            $timesheet->where('project_id', '=', $request->project_id);
         }
 
-        if ($request->has('project_id')) {
-            $timesheet->where('start_date', '=', $request->start_date);
+        if ($request->has('user_id') && !empty($request->user_id)) {
+            $timesheet->where('user_id', '=', $request->user_id);
         }
 
-        if ($request->has('date')) {
+        if ($request->has('date') && !empty($request->date)) {
             $timesheet->where('date', '=', $request->date);
         }
 
-        if ($request->has('hours')) {
+        if ($request->has('hours') && !empty($request->hours)) {
             $timesheet->where('hours', '=', $request->hours);
         }
 
-        return response()->json([
-            'timesheets' => $timesheet->get(),
-        ]);
+        return TimesheetDetailsResource::collection($timesheet->with(['project', 'user'])->get());
     }
 
     /**
@@ -62,9 +62,7 @@ class TimesheetController extends Controller
 
         $timesheet = Timesheet::create($data);
 
-        return response()->json([
-            'timesheet' => $timesheet,
-        ]);
+        return new TimesheetDetailsResource($timesheet);
     }
 
     /**
@@ -72,9 +70,7 @@ class TimesheetController extends Controller
      */
     public function show(string $id)
     {
-        return response()->json([
-            'timesheet' => Timesheet::findOrFail($id),
-        ]);
+        return new TimesheetDetailsResource(Timesheet::findOrFail($id));
     }
 
     /**

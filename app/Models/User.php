@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use App\Models\Project;
+use App\Models\Timesheet;
 
 class User extends Authenticatable
 {
@@ -35,5 +37,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the projects for the user.
+     */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class);
+    }
+
+    /**
+     * Get the timesheets for the user.
+     */
+    public function timesheets()
+    {
+        return $this->hasMany(Timesheet::class);
     }
 }

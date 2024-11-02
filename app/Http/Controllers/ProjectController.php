@@ -6,6 +6,9 @@ use App\Models\Project;
 use App\Models\Timesheet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\ProjectResource;
+use App\Http\Resources\TimesheetResource;
+use App\Http\Resources\UserResource;
 
 class ProjectController extends Controller
 {
@@ -16,29 +19,27 @@ class ProjectController extends Controller
     {
         $projects = Project::query();
 
-        if ($request->has('name')) {
+        if ($request->has('name') && !empty($request->name)) {
             $projects->where('name', 'like', "%{$request->name}%");
         }
 
-        if ($request->has('department')) {
+        if ($request->has('department') && !empty($request->department)) {
             $projects->where('department', 'like', "%{$request->department}%");
         }
 
-        if ($request->has('start_date')) {
+        if ($request->has('start_date') && !empty($request->start_date)) {
             $projects->where('start_date', '=', $request->start_date);
         }
 
-        if ($request->has('end_date')) {
+        if ($request->has('end_date') && !empty($request->end_date)) {
             $projects->where('end_date', '=', $request->end_date);
         }
 
-        if ($request->has('status')) {
+        if ($request->has('status') && !empty($request->status)) {
             $projects->where('status', '=', $request->status);
         }
 
-        return response()->json([
-            'projects' => $projects->get(),
-        ]);
+        return ProjectResource::collection($projects->get());
     }
 
     /**
@@ -62,9 +63,7 @@ class ProjectController extends Controller
 
         $project = Project::create($data);
 
-        return response()->json([
-            'project' => $project,
-        ]);
+        return new ProjectResource($project);
     }
 
     /**
@@ -72,9 +71,7 @@ class ProjectController extends Controller
      */
     public function show(string $id)
     {
-        return response()->json([
-            'project' => Project::findOrFail($id),
-        ]);
+        return new ProjectResource(Project::findOrFail($id));
     }
 
     /**
@@ -113,5 +110,25 @@ class ProjectController extends Controller
         $project->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Display a listing of project's users.
+     */
+    public function users(Request $request, string $id)
+    {
+        $project = Project::findOrFail($id);
+
+        return UserResource::collection($project->users);
+    }
+
+    /**
+     * Display a listing of project's timesheets.
+     */
+    public function timesheets(Request $request, string $id)
+    {
+        $project = Project::findOrFail($id);
+
+        return TimesheetResource::collection($project->timesheets);
     }
 }
